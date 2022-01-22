@@ -1,8 +1,5 @@
 #include "Decrypt.h"
 
-unsigned char key[EVP_MAX_KEY_LENGTH];
-unsigned char iv[EVP_MAX_IV_LENGTH];
-
 std::vector<unsigned char> HashExtraction(std::vector<unsigned char> cipherText) {
     const size_t hashSize = 32;
     std::vector<unsigned char> hash(cipherText);
@@ -50,7 +47,7 @@ void Decrypt::PasswordToKey(std::string& password)
     const unsigned char* salt = NULL;
     if (!EVP_BytesToKey(EVP_aes_128_cbc(), EVP_md5(), salt,
         reinterpret_cast<unsigned char*>(&password[0]),
-        password.size(), 1, key, iv))
+        password.size(), 1, m_key, m_iv))
     {
         throw std::runtime_error("EVP_BytesToKey failed");
     }
@@ -71,7 +68,7 @@ void Decrypt::CalculateHash(const std::vector<unsigned char>& data, std::vector<
 bool Decrypt::DecryptAes(const std::vector<unsigned char> cipherText, std::vector<unsigned char>& plainText)
 {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv))
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, m_key, m_iv))
     {
         throw std::runtime_error("DeryptInit error");
     }

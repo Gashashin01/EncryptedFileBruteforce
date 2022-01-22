@@ -27,4 +27,6 @@ private:
 private:
 	const std::vector<unsigned char> m_cipherText;
 	const std::vector<unsigned char> m_cipherHash;
+	unsigned char m_key[EVP_MAX_KEY_LENGTH];
+	unsigned char m_iv[EVP_MAX_IV_LENGTH];
 };

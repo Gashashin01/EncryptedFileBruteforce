@@ -15,8 +15,6 @@
 #define BRUT_NUMBERS       (1<<0)
 #define BRUT_ENG_LOWERCASE (1<<1)
 
-std::vector<char> alphabet;
-
 Bruteforce::Bruteforce(Decrypt decrypt) :
     m_decrypt(decrypt)
 {}
@@ -31,7 +29,7 @@ void Bruteforce::SetAlphabet(int letterSet) {
     }
 
     for (size_t i = 0; i < letters.size(); i++) {
-        alphabet.push_back(letters[i]);
+        m_alphabet.push_back(letters[i]);
     }
 }
 
@@ -41,15 +39,15 @@ std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsign
         password[i] = 0;
     }
     
-    std::string lastAviablePass = std::string(password.size(), alphabet.back());
+    std::string lastAviablePass = std::string(password.size(), m_alphabet.back());
 
     bool needBreakLoop = false;
     while (!needBreakLoop) {
-        for (size_t letter = 0; letter < alphabet.size(); letter++) {
+        for (size_t letter = 0; letter < m_alphabet.size(); letter++) {
             password[0] = letter;
             std::string pass = std::string();
             for (size_t i = 0; i < password.size(); i++) {
-                pass.push_back(alphabet[password[i]]);
+                pass.push_back(m_alphabet[password[i]]);
             }
             if (m_decrypt.DecryptMain(pass)) {
                 return pass;
@@ -60,7 +58,7 @@ std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsign
         }
         for (size_t i = 1; i < password.size(); i++) {
             password[i]++;
-            if (password[i] == alphabet.size()) {
+            if (password[i] == m_alphabet.size()) {
                 password[i] = 0;
             }
             else {
