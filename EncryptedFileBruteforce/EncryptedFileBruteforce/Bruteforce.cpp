@@ -15,12 +15,12 @@
 #define BRUT_NUMBERS       (1<<0)
 #define BRUT_ENG_LOWERCASE (1<<1)
 
-Bruteforce::Bruteforce(Decrypt decrypt) :
+Bruteforce::Bruteforce(Decrypt& decrypt) :
     m_decrypt(decrypt)
 {}
 
 void Bruteforce::SetAlphabet(int letterSet) {
-    std::string letters = "";
+    std::string letters;
     if (letterSet & BRUT_NUMBERS) { 
         letters += "0123456789"; 
     }
@@ -33,7 +33,7 @@ void Bruteforce::SetAlphabet(int letterSet) {
     }
 }
 
-std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsigned char> cipherText, std::vector<unsigned char> cipherHash) {
+std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsigned char>& cipherText, std::vector<unsigned char>& cipherHash) {
     std::vector<int> password(brutforceSize); 
     for (size_t i = 0; i < password.size(); i++) {
         password[i] = 0;
@@ -45,7 +45,7 @@ std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsign
     while (!needBreakLoop) {
         for (size_t letter = 0; letter < m_alphabet.size(); letter++) {
             password[0] = letter;
-            std::string pass = std::string();
+            std::string pass;
             for (size_t i = 0; i < password.size(); i++) {
                 pass.push_back(m_alphabet[password[i]]);
             }
@@ -83,7 +83,9 @@ int Bruteforce::BruteforceMain() {
             std::cout << "Password not found";
             return -1;
         }
-        std::string brutedpass = BruteforcePassword(brutedpassSize, m_decrypt.GetCipherText(), m_decrypt.GetCipherHash());
+        std::vector<unsigned char> cipherHash = m_decrypt.GetCipherHash();
+        std::vector<unsigned char> cipherText = m_decrypt.GetCipherText();
+        std::string brutedpass = BruteforcePassword(brutedpassSize, cipherHash, cipherText);
         
         if (!brutedpass.empty()) {
             //оп, пароль найден, выводим

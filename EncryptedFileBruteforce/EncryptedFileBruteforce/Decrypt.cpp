@@ -17,11 +17,9 @@ void ReadFile(const std::string& filePath, std::vector<unsigned char>& buf)
 
     buf.clear();
     buf.insert(buf.begin(), std::istreambuf_iterator<unsigned char>(fileStream), std::istreambuf_iterator<unsigned char>());
-
-    fileStream.close();
 }
 
-Decrypt::Decrypt(const std::vector<unsigned char> cipherText, const std::vector<unsigned char> cipherHash) :
+Decrypt::Decrypt(const std::vector<unsigned char>& cipherText, const std::vector<unsigned char>& cipherHash) :
     m_cipherText(cipherText),
     m_cipherHash(cipherHash)
 {

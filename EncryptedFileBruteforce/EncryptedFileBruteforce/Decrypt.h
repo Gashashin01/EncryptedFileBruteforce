@@ -14,7 +14,7 @@ std::vector<unsigned char> HashExtraction(std::vector<unsigned char> cipherText)
 
 class Decrypt {
 public:
-	Decrypt(const std::vector<unsigned char> cipherText, const std::vector<unsigned char> cipherHash);
+	Decrypt(const std::vector<unsigned char>& cipherText, const std::vector<unsigned char>& cipherHash);
 	bool DecryptMain(std::string& passw);
 	std::vector<unsigned char> GetCipherText();
 	std::vector<unsigned char> GetCipherHash();
