@@ -9,35 +9,24 @@
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 #include <openssl/sha.h>
-#include "Decrypt.h"
 #include "Bruteforce.h"
 
-#define BRUT_NUMBERS       (1<<0)
-#define BRUT_ENG_LOWERCASE (1<<1)
-
-Bruteforce::Bruteforce(Decrypt& decrypt) :
+Bruteforce::Bruteforce(CipherTextWrapper& decrypt) :
     m_decrypt(decrypt)
-{}
+{
+    SetAlphabet();
+}
 
-void Bruteforce::SetAlphabet(int letterSet) {
-    std::string letters;
-    if (letterSet & BRUT_NUMBERS) { 
-        letters += "0123456789"; 
-    }
-    if (letterSet & BRUT_ENG_LOWERCASE) { 
-        letters += "abcdefghijklmnopqrstuvwxyz"; 
-    }
+void Bruteforce::SetAlphabet() {
+    std::string letters = "0123456789abcdefghijklmnopqrstuvwxyz";
 
     for (size_t i = 0; i < letters.size(); i++) {
         m_alphabet.push_back(letters[i]);
     }
 }
 
-std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsigned char>& cipherText, std::vector<unsigned char>& cipherHash) {
-    std::vector<int> password(brutforceSize); 
-    for (size_t i = 0; i < password.size(); i++) {
-        password[i] = 0;
-    }
+std::string Bruteforce::BruteforcePassword(int brutforceSize) {
+    std::vector<int> password(brutforceSize);
     
     std::string lastAviablePass = std::string(password.size(), m_alphabet.back());
 
@@ -49,7 +38,7 @@ std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsign
             for (size_t i = 0; i < password.size(); i++) {
                 pass.push_back(m_alphabet[password[i]]);
             }
-            if (m_decrypt.DecryptMain(pass)) {
+            if (m_decrypt.CheckPassword(pass)) {
                 return pass;
             }
             else if (pass == lastAviablePass) {
@@ -66,14 +55,10 @@ std::string Bruteforce::BruteforcePassword(int brutforceSize, std::vector<unsign
             }
         }
     }
-    return std::string(); //Возвращаем пустую строку, если пароль не был найден
+    return std::string();
 }
 
 int Bruteforce::BruteforceMain() {
-    int alphabet = BRUT_NUMBERS | BRUT_ENG_LOWERCASE;
-
-    alphabet = BRUT_NUMBERS | BRUT_ENG_LOWERCASE;
-    SetAlphabet(alphabet);
     
     int brutedpassSize = 0;
     auto begin = std::chrono::high_resolution_clock::now();
@@ -83,12 +68,9 @@ int Bruteforce::BruteforceMain() {
             std::cout << "Password not found";
             return -1;
         }
-        std::vector<unsigned char> cipherHash = m_decrypt.GetCipherHash();
-        std::vector<unsigned char> cipherText = m_decrypt.GetCipherText();
-        std::string brutedpass = BruteforcePassword(brutedpassSize, cipherHash, cipherText);
+        std::string brutedpass = BruteforcePassword(brutedpassSize);
         
         if (!brutedpass.empty()) {
-            //оп, пароль найден, выводим
             auto end = std::chrono::high_resolution_clock::now();
             std::cout << "----------------------" << std::endl;
             std::cout << "Your password: " << brutedpass << std::endl;

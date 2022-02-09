@@ -1,17 +1,14 @@
 #pragma once
-#include "Decrypt.h"
-
-#define BRUT_NUMBERS       (1<<0)
-#define BRUT_ENG_LOWERCASE (1<<1)
+#include "CipherTextWrapper.h"
 
 class Bruteforce {
 public:
-	Bruteforce(Decrypt& decrypt);
+	Bruteforce(CipherTextWrapper& decrypt);
 	int BruteforceMain();
 private:
-	void SetAlphabet(int letterSet);
-	std::string BruteforcePassword(int brutforceSize, std::vector<unsigned char>& cipherText, std::vector<unsigned char>& cipherHash);
+	void SetAlphabet();
+	std::string BruteforcePassword(int brutforceSize);
 private:
-	Decrypt m_decrypt;
+	CipherTextWrapper m_decrypt;
 	std::vector<char> m_alphabet;
 };

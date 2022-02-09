@@ -1,4 +1,4 @@
-#include "Decrypt.h"
+#include "CipherTextWrapper.h"
 
 std::vector<unsigned char> HashExtraction(std::vector<unsigned char> cipherText) {
     const size_t hashSize = 32;
@@ -19,25 +19,25 @@ void ReadFile(const std::string& filePath, std::vector<unsigned char>& buf)
     buf.insert(buf.begin(), std::istreambuf_iterator<unsigned char>(fileStream), std::istreambuf_iterator<unsigned char>());
 }
 
-Decrypt::Decrypt(const std::vector<unsigned char>& cipherText, const std::vector<unsigned char>& cipherHash) :
+CipherTextWrapper::CipherTextWrapper(const std::vector<unsigned char>& cipherText, const std::vector<unsigned char>& cipherHash) :
     m_cipherText(cipherText),
     m_cipherHash(cipherHash)
 {
+    OpenSSL_add_all_digests();
+    m_dgst = EVP_get_digestbyname("MD5");
 }
 
-std::vector<unsigned char> Decrypt::GetCipherText() {
+std::vector<unsigned char>& CipherTextWrapper::GetCipherText() {
     return m_cipherText;
 }
 
-std::vector<unsigned char> Decrypt::GetCipherHash() {
+std::vector<unsigned char>& CipherTextWrapper::GetCipherHash() {
     return m_cipherHash;
 }
 
-void Decrypt::PasswordToKey(std::string& password)
+void CipherTextWrapper::PasswordToKey(std::string& password)
 {
-    OpenSSL_add_all_digests();
-    const EVP_MD* dgst = EVP_get_digestbyname("MD5");
-    if (!dgst)
+    if (!m_dgst)
     {
         throw std::runtime_error("no such digest");
     }
@@ -51,7 +51,7 @@ void Decrypt::PasswordToKey(std::string& password)
     }
 }
 
-void Decrypt::CalculateHash(const std::vector<unsigned char>& data, std::vector<unsigned char>& hash)
+void CipherTextWrapper::CalculateHash(const std::vector<unsigned char>& data, std::vector<unsigned char>& hash)
 {
     std::vector<unsigned char> hashTmp(SHA256_DIGEST_LENGTH);
 
@@ -63,7 +63,7 @@ void Decrypt::CalculateHash(const std::vector<unsigned char>& data, std::vector<
     hash.swap(hashTmp);
 }
 
-bool Decrypt::DecryptAes(const std::vector<unsigned char> cipherText, std::vector<unsigned char>& plainText)
+bool CipherTextWrapper::DecryptAes(std::vector<unsigned char>& plainText)
 {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, m_key, m_iv))
@@ -71,11 +71,11 @@ bool Decrypt::DecryptAes(const std::vector<unsigned char> cipherText, std::vecto
         throw std::runtime_error("DeryptInit error");
     }
 
-    size_t size = cipherText.size();
+    size_t size = m_cipherText.size();
 
-    std::vector<unsigned char> plainTextBuf(cipherText.size());
+    std::vector<unsigned char> plainTextBuf(m_cipherText.size());
     int plainTextSize = 0;
-    int updateStat = EVP_DecryptUpdate(ctx, &plainTextBuf[0], &plainTextSize, &cipherText[0], cipherText.size());
+    int updateStat = EVP_DecryptUpdate(ctx, &plainTextBuf[0], &plainTextSize, &m_cipherText[0], m_cipherText.size());
 
     int lastPartLen = 0;
     if (!EVP_DecryptFinal_ex(ctx, &plainTextBuf[0] + plainTextSize, &lastPartLen)) {
@@ -89,19 +89,19 @@ bool Decrypt::DecryptAes(const std::vector<unsigned char> cipherText, std::vecto
     return true;
 }
 
-void Decrypt::WriteFile(const std::string& filePath, const std::vector<unsigned char>& buf)
+void CipherTextWrapper::WriteFile(const std::string& filePath, const std::vector<unsigned char>& buf)
 {
     std::basic_ofstream<unsigned char> fileStream(filePath, std::ios::binary);
     fileStream.write(&buf[0], buf.size());
     fileStream.close();
 }
 
-bool Decrypt::DecryptMain(std::string& passw)
+bool CipherTextWrapper::CheckPassword(std::string& passw)
 {
     std::vector<unsigned char> hash;
     PasswordToKey(passw);
     std::vector<unsigned char> plainText;
-    if (!DecryptAes(m_cipherText, plainText)) {
+    if (!DecryptAes(plainText)) {
         return false;
     }
     CalculateHash(plainText, hash);

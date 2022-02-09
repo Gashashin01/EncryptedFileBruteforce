@@ -12,21 +12,22 @@
 void ReadFile(const std::string& filePath, std::vector<unsigned char>& buf);
 std::vector<unsigned char> HashExtraction(std::vector<unsigned char> cipherText);
 
-class Decrypt {
+class CipherTextWrapper {
 public:
-	Decrypt(const std::vector<unsigned char>& cipherText, const std::vector<unsigned char>& cipherHash);
-	bool DecryptMain(std::string& passw);
-	std::vector<unsigned char> GetCipherText();
-	std::vector<unsigned char> GetCipherHash();
+	CipherTextWrapper(const std::vector<unsigned char>& cipherText, const std::vector<unsigned char>& cipherHash);
+	bool CheckPassword(std::string& passw);
+	std::vector<unsigned char>& GetCipherText();
+	std::vector<unsigned char>& GetCipherHash();
 private:	
 	void PasswordToKey(std::string& password);
 	void CalculateHash(const std::vector<unsigned char>& data, std::vector<unsigned char>& hash);
-	bool DecryptAes(const std::vector<unsigned char> cipherText, std::vector<unsigned char>& plainText);
+	bool DecryptAes(std::vector<unsigned char>& plainText);
 	void WriteFile(const std::string& filePath, const std::vector<unsigned char>& buf);
 
 private:
-	const std::vector<unsigned char> m_cipherText;
-	const std::vector<unsigned char> m_cipherHash;
+	const EVP_MD* m_dgst;
+	std::vector<unsigned char> m_cipherText;
+	std::vector<unsigned char> m_cipherHash;
 	unsigned char m_key[EVP_MAX_KEY_LENGTH];
 	unsigned char m_iv[EVP_MAX_IV_LENGTH];
 };
